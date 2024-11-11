@@ -95,9 +95,9 @@
             }
 
             // Define traces for Plotly
-            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength', line: { shape: 'linear' } };
-            const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency', line: { shape: 'linear' } };
-            const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput', line: { shape: 'linear' } };
+            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'markers', name: 'Signal Strength' };
+            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'markers', name: 'Latency' };
+            const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'markers', name: 'Throughput' };
 
             const layout = { 
                 title: '5G KPIs Over Time',
