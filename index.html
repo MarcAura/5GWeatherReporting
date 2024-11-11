@@ -58,6 +58,7 @@
         
         // Reference to the Firebase Realtime Database 'kpis' node
         const db = firebase.database().ref('kpis');
+        let lastTimestamp = null; // Store the last timestamp seen to avoid duplicates
 
         // Function to update the chart with data from Firebase
         function updateChart(data) {
@@ -77,10 +78,18 @@
             // Extract data from each entry in the Firebase data object
             Object.keys(data).forEach(key => {
                 const entry = data[key];
-                timestamps.push(new Date(entry.timestamp));
-                signalStrength.push(entry.signal_strength);
-                latency.push(entry.latency);
-                throughput.push(entry.throughput);
+                const entryTimestamp = new Date(entry.timestamp);
+
+                // Only add entries with timestamps later than the last seen timestamp
+                if (!lastTimestamp || entryTimestamp > lastTimestamp) {
+                    timestamps.push(entryTimestamp);
+                    signalStrength.push(entry.signal_strength);
+                    latency.push(entry.latency);
+                    throughput.push(entry.throughput);
+
+                    // Update lastTimestamp to the current entry's timestamp
+                    lastTimestamp = entryTimestamp;
+                }
             });
 
             // Define traces for Plotly
