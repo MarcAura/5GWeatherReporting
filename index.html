@@ -31,47 +31,43 @@
         
         firebase.initializeApp(firebaseConfig);
 
-        console.log("Firebase initialized with config:", firebaseConfig);
-        
-        const db = firebase.database().ref('kpis');
-        
-        // Function to update the chart
-        function updateChart(data) {
-            if (!data) {
-                console.log("No data received from Firebase");
-                return;
-            }
+    const db = firebase.database().ref('kpis');
 
-            console.log("Data received:", data);
-
-            const timestamps = [];
-            const signalStrength = [];
-            const latency = [];
-            const throughput = [];
-
-            Object.keys(data).forEach(key => {
-                const entry = data[key];
-                timestamps.push(new Date(entry.timestamp));
-                signalStrength.push(entry.signal_strength);
-                latency.push(entry.latency);
-                throughput.push(entry.throughput);
-            });
-
-            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength' };
-            const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency' };
-            const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput' };
-
-            const layout = { title: '5G KPIs Over Time' };
-            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
+    function updateChart(data) {
+        if (!data) {
+            console.log("No data received from Firebase");
+            return;
         }
 
-        // Listen for data changes in Firebase and update chart
-        db.on('value', (snapshot) => {
-            const data = snapshot.val();
-            console.log("Snapshot from Firebase:", snapshot);
-            updateChart(data);
+        const timestamps = [];
+        const signalStrength = [];
+        const latency = [];
+        const throughput = [];
+
+        Object.keys(data).forEach(key => {
+            const entry = data[key];
+            timestamps.push(new Date(entry.timestamp));
+            signalStrength.push(entry.signal_strength);
+            latency.push(entry.latency);
+            throughput.push(entry.throughput);
         });
-    </script>
+
+        const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength' };
+        const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency' };
+        const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput' };
+
+        const layout = { title: '5G KPIs Over Time' };
+        
+        // Use Plotly.react() to update the plot without creating duplicates
+        Plotly.react('chart', [trace1, trace2, trace3], layout);
+    }
+
+    // Listen for data changes in Firebase and update chart
+    db.on('value', (snapshot) => {
+        const data = snapshot.val();
+        updateChart(data);
+    });
+</script>
 
 </body>
 </html>
