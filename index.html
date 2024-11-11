@@ -4,12 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5G Data Visualization</title>
+    <!-- Include Plotly for charting -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Include Firebase libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; }
-        #chart { width: 100%; height: 500px; }
+        /* Basic page styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-top: 20px;
+            font-size: 2em;
+        }
+        
+        #chart {
+            width: 80%;
+            max-width: 1000px;
+            height: 500px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -17,7 +43,7 @@
     <div id="chart"></div>
     
     <script>
-        // Initialize Firebase (Replace with your Firebase project config)
+        // Initialize Firebase with your project's configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBds2P9R-kdoBtVY3esPsIEUxhJ2pN2DbM",
             authDomain: "gweatherreporting.firebaseapp.com",
@@ -28,46 +54,61 @@
             appId: "1:41795039504:web:e6f3108717a12b05b67595",
             measurementId: "G-XBWC9G7HHD"
         };
-        
         firebase.initializeApp(firebaseConfig);
+        
+        // Reference to the Firebase Realtime Database 'kpis' node
+        const db = firebase.database().ref('kpis');
 
-    const db = firebase.database().ref('kpis');
+        // Function to update the chart with data from Firebase
+        function updateChart(data) {
+            if (!data) {
+                console.warn("No data received from Firebase");
+                return;
+            }
 
-    function updateChart(data) {
-        if (!data) {
-            console.log("No data received from Firebase");
-            return;
+            console.log("Data received from Firebase:", data);
+
+            // Arrays to store chart data
+            const timestamps = [];
+            const signalStrength = [];
+            const latency = [];
+            const throughput = [];
+
+            // Extract data from each entry in the Firebase data object
+            Object.keys(data).forEach(key => {
+                const entry = data[key];
+                timestamps.push(new Date(entry.timestamp));
+                signalStrength.push(entry.signal_strength);
+                latency.push(entry.latency);
+                throughput.push(entry.throughput);
+            });
+
+            // Define traces for Plotly
+            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength', line: { shape: 'linear' } };
+            const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency', line: { shape: 'linear' } };
+            const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput', line: { shape: 'linear' } };
+
+            // Define layout for the chart
+            const layout = { 
+                title: '5G KPIs Over Time',
+                xaxis: { title: 'Timestamp' },
+                yaxis: { title: 'Value' },
+                showlegend: true
+            };
+            
+            // Use Plotly.react to update the plot without creating duplicates
+            Plotly.react('chart', [trace1, trace2, trace3], layout);
         }
 
-        const timestamps = [];
-        const signalStrength = [];
-        const latency = [];
-        const throughput = [];
-
-        Object.keys(data).forEach(key => {
-            const entry = data[key];
-            timestamps.push(new Date(entry.timestamp));
-            signalStrength.push(entry.signal_strength);
-            latency.push(entry.latency);
-            throughput.push(entry.throughput);
+        // Listen for changes in the database and update chart on change
+        db.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                updateChart(data);
+            } else {
+                console.warn("Firebase snapshot is empty");
+            }
         });
-
-        const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength' };
-        const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency' };
-        const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput' };
-
-        const layout = { title: '5G KPIs Over Time' };
-        
-        // Use Plotly.react() to update the plot without creating duplicates
-        Plotly.react('chart', [trace1, trace2, trace3], layout);
-    }
-
-    // Listen for data changes in Firebase and update chart
-    db.on('value', (snapshot) => {
-        const data = snapshot.val();
-        updateChart(data);
-    });
-</script>
-
+    </script>
 </body>
 </html>
