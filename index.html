@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>5G Data Visualization</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> <!-- Include Plotly -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
@@ -28,11 +28,20 @@
             appId: "YOUR_APP_ID"
         };
         firebase.initializeApp(firebaseConfig);
+
+        console.log("Firebase initialized with config:", firebaseConfig);
         
         const db = firebase.database().ref('kpis');
         
         // Function to update the chart
         function updateChart(data) {
+            if (!data) {
+                console.log("No data received from Firebase");
+                return;
+            }
+
+            console.log("Data received:", data);
+
             const timestamps = [];
             const signalStrength = [];
             const latency = [];
@@ -57,6 +66,7 @@
         // Listen for data changes in Firebase and update chart
         db.on('value', (snapshot) => {
             const data = snapshot.val();
+            console.log("Snapshot from Firebase:", snapshot);
             updateChart(data);
         });
     </script>
