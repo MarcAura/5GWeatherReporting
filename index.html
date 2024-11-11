@@ -15,7 +15,51 @@
 <body>
     <h1>5G Data Visualization Dashboard</h1>
     <div id="chart"></div>
-    <script src="scripts.js"></script> <!-- Link to your JavaScript file -->
+    
+    <script>
+        // Initialize Firebase (Replace with your Firebase project config)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        
+        const db = firebase.database().ref('kpis');
+        
+        // Function to update the chart
+        function updateChart(data) {
+            const timestamps = [];
+            const signalStrength = [];
+            const latency = [];
+            const throughput = [];
+
+            Object.keys(data).forEach(key => {
+                const entry = data[key];
+                timestamps.push(new Date(entry.timestamp));
+                signalStrength.push(entry.signal_strength);
+                latency.push(entry.latency);
+                throughput.push(entry.throughput);
+            });
+
+            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength' };
+            const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency' };
+            const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput' };
+
+            const layout = { title: '5G KPIs Over Time' };
+            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
+        }
+
+        // Listen for data changes in Firebase and update chart
+        db.on('value', (snapshot) => {
+            const data = snapshot.val();
+            updateChart(data);
+        });
+    </script>
 
 </body>
 </html>
