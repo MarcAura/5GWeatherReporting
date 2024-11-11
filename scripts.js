@@ -1,3 +1,4 @@
+// Firebase Configuration
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
@@ -9,11 +10,16 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
+// Reference to Firebase Database
 const db = firebase.database().ref('kpis');
+
+// Listen for data changes and update the chart
 db.on('value', (snapshot) => {
     const data = snapshot.val();
     updateChart(data);
 });
+
+// Function to update the chart with fetched data
 function updateChart(data) {
     const timestamps = [];
     const signalStrength = [];
@@ -35,8 +41,20 @@ function updateChart(data) {
     const layout = { title: '5G KPIs Over Time' };
     Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
 }
+
+// Optional: Fetch Weather Data
 async function fetchWeatherData() {
-    const response = await fetch('https://api.oikolab.com/weather?params');
-    const weatherData = await response.json();
-    displayWeatherData(weatherData);
+    try {
+        const response = await fetch('https://api.oikolab.com/weather?params');
+        const weatherData = await response.json();
+        displayWeatherData(weatherData);  // Call a function to display weather data if needed
+    } catch (error) {
+        console.error("Error fetching weather data:", error);
+    }
+}
+
+// Optional: Function to display weather data on the page
+function displayWeatherData(weatherData) {
+    // Implement the display logic here, e.g., update an HTML element with weather data
+    console.log("Weather data:", weatherData);
 }
