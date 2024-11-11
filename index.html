@@ -58,7 +58,8 @@
         
         // Reference to the Firebase Realtime Database 'kpis' node
         const db = firebase.database().ref('kpis');
-        let lastTimestamp = null; // Store the last timestamp seen to avoid duplicates
+        let lastTimestamp = null; // Store the last timestamp seen to avoid duplicates after initial load
+        let initialLoadComplete = false; // Track whether initial load is complete
 
         // Function to update the chart with data from Firebase
         function updateChart(data) {
@@ -69,7 +70,6 @@
 
             console.log("Data received from Firebase:", data);
 
-            // Arrays to store chart data
             const timestamps = [];
             const signalStrength = [];
             const latency = [];
@@ -80,24 +80,25 @@
                 const entry = data[key];
                 const entryTimestamp = new Date(entry.timestamp);
 
-                // Only add entries with timestamps later than the last seen timestamp
-                if (!lastTimestamp || entryTimestamp > lastTimestamp) {
+                // If initial load is complete, only add entries with timestamps later than lastTimestamp
+                if (!initialLoadComplete || entryTimestamp > lastTimestamp) {
                     timestamps.push(entryTimestamp);
                     signalStrength.push(entry.signal_strength);
                     latency.push(entry.latency);
                     throughput.push(entry.throughput);
-
-                    // Update lastTimestamp to the current entry's timestamp
-                    lastTimestamp = entryTimestamp;
                 }
             });
+
+            // Update lastTimestamp to the most recent timestamp after processing all data
+            if (timestamps.length > 0) {
+                lastTimestamp = timestamps[timestamps.length - 1];
+            }
 
             // Define traces for Plotly
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', name: 'Signal Strength', line: { shape: 'linear' } };
             const trace2 = { x: timestamps, y: latency, type: 'scatter', name: 'Latency', line: { shape: 'linear' } };
             const trace3 = { x: timestamps, y: throughput, type: 'scatter', name: 'Throughput', line: { shape: 'linear' } };
 
-            // Define layout for the chart
             const layout = { 
                 title: '5G KPIs Over Time',
                 xaxis: { title: 'Timestamp' },
@@ -107,6 +108,9 @@
             
             // Use Plotly.react to update the plot without creating duplicates
             Plotly.react('chart', [trace1, trace2, trace3], layout);
+
+            // Mark initial load as complete
+            initialLoadComplete = true;
         }
 
         // Listen for changes in the database and update chart on change
