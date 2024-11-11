@@ -70,10 +70,6 @@
 
             console.log("Data received from Firebase:", data);
 
-            const signalStrengthTraces = [];
-            const latencyTraces = [];
-            const throughputTraces = [];
-
             const timestamps = [];
             const signalStrength = [];
             const latency = [];
@@ -98,36 +94,10 @@
                 lastTimestamp = timestamps[timestamps.length - 1];
             }
 
-            // Create individual line segments for each pair of points
-            for (let i = 0; i < timestamps.length - 1; i++) {
-                signalStrengthTraces.push({
-                    x: [timestamps[i], timestamps[i + 1]],
-                    y: [signalStrength[i], signalStrength[i + 1]],
-                    type: 'scatter',
-                    mode: 'lines+markers',
-                    name: 'Signal Strength',
-                    line: { shape: 'linear' }
-                });
-                latencyTraces.push({
-                    x: [timestamps[i], timestamps[i + 1]],
-                    y: [latency[i], latency[i + 1]],
-                    type: 'scatter',
-                    mode: 'lines+markers',
-                    name: 'Latency',
-                    line: { shape: 'linear' }
-                });
-                throughputTraces.push({
-                    x: [timestamps[i], timestamps[i + 1]],
-                    y: [throughput[i], throughput[i + 1]],
-                    type: 'scatter',
-                    mode: 'lines+markers',
-                    name: 'Throughput',
-                    line: { shape: 'linear' }
-                });
-            }
-
-            // Combine all traces
-            const allTraces = [...signalStrengthTraces, ...latencyTraces, ...throughputTraces];
+            // Define traces for Plotly with a single trace per metric to ensure a continuous line
+            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength' };
+            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency' };
+            const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput' };
 
             const layout = { 
                 title: '5G KPIs Over Time',
@@ -137,7 +107,7 @@
             };
             
             // Use Plotly.react to update the plot without creating duplicates
-            Plotly.react('chart', allTraces, layout);
+            Plotly.react('chart', [trace1, trace2, trace3], layout);
 
             // Mark initial load as complete
             initialLoadComplete = true;
