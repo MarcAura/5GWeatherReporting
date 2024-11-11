@@ -70,29 +70,20 @@
 
             console.log("Data received from Firebase:", data);
 
-            const timestamps = [];
-            const signalStrength = [];
-            const latency = [];
-            const throughput = [];
+            const dataArray = Object.keys(data).map(key => ({
+                timestamp: new Date(data[key].timestamp),
+                signal_strength: data[key].signal_strength,
+                latency: data[key].latency,
+                throughput: data[key].throughput
+            }));
 
-            // Extract data from each entry in the Firebase data object
-            Object.keys(data).forEach(key => {
-                const entry = data[key];
-                const entryTimestamp = new Date(entry.timestamp);
+            // Sort data by timestamp to ensure continuity in the plot
+            dataArray.sort((a, b) => a.timestamp - b.timestamp);
 
-                // If initial load is complete, only add entries with timestamps later than lastTimestamp
-                if (!initialLoadComplete || entryTimestamp > lastTimestamp) {
-                    timestamps.push(entryTimestamp);
-                    signalStrength.push(entry.signal_strength);
-                    latency.push(entry.latency);
-                    throughput.push(entry.throughput);
-                }
-            });
-
-            // Update lastTimestamp to the most recent timestamp after processing all data
-            if (timestamps.length > 0) {
-                lastTimestamp = timestamps[timestamps.length - 1];
-            }
+            const timestamps = dataArray.map(entry => entry.timestamp);
+            const signalStrength = dataArray.map(entry => entry.signal_strength);
+            const latency = dataArray.map(entry => entry.latency);
+            const throughput = dataArray.map(entry => entry.throughput);
 
             // Define traces for Plotly with a single trace per metric to ensure a continuous line
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength' };
