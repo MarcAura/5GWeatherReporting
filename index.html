@@ -45,11 +45,11 @@
             margin-right: 8px;
         }
 
-        .clear-weather { background-color: rgba(230, 247, 255, 0.35); }
-        .cloud-cover { background-color: rgba(242, 230, 255, 0.35); }
-        .rain-high-humidity { background-color: rgba(217, 242, 217, 0.35); }
-        .light-snowfall { background-color: rgba(255, 245, 230, 0.35); }
-        .heavy-snowfall { background-color: rgba(255, 204, 204, 0.35); }
+        .clear-weather { background-color: rgba(230, 247, 255, 0.5); }
+        .cloud-cover { background-color: rgba(242, 230, 255, 0.5); }
+        .rain-high-humidity { background-color: rgba(217, 242, 217, 0.5); }
+        .light-snowfall { background-color: rgba(255, 245, 230, 0.5); }
+        .heavy-snowfall { background-color: rgba(255, 204, 204, 0.5); }
     </style>
 </head>
 <body>
@@ -114,11 +114,11 @@
             };
 
             const weatherOverlays = [
-                { condition: 'Clear Weather', start: timestamps[0], end: timestamps[4], color: 'rgba(230, 247, 255, 0.35)' },
-                { condition: 'Cloud Cover', start: timestamps[5], end: timestamps[9], color: 'rgba(242, 230, 255, 0.35)' },
-                { condition: 'Rain and High Humidity', start: timestamps[10], end: timestamps[14], color: 'rgba(217, 242, 217, 0.35)' },
-                { condition: 'Light Snowfall and Cloud Cover', start: timestamps[15], end: timestamps[19], color: 'rgba(255, 245, 230, 0.35)' },
-                { condition: 'Heavy Snowfall and High Snow Depth', start: timestamps[20], end: timestamps[24], color: 'rgba(255, 204, 204, 0.35)' }
+                { condition: 'Clear Weather', start: timestamps[0], end: timestamps[4], color: 'rgba(230, 247, 255, 0.5)' },
+                { condition: 'Cloud Cover', start: timestamps[5], end: timestamps[9], color: 'rgba(242, 230, 255, 0.5)' },
+                { condition: 'Rain and High Humidity', start: timestamps[10], end: timestamps[14], color: 'rgba(217, 242, 217, 0.5)' },
+                { condition: 'Light Snowfall and Cloud Cover', start: timestamps[15], end: timestamps[19], color: 'rgba(255, 245, 230, 0.5)' },
+                { condition: 'Heavy Snowfall and High Snow Depth', start: timestamps[20], end: timestamps[24], color: 'rgba(255, 204, 204, 0.5)' }
             ];
 
             weatherOverlays.forEach(overlay => {
@@ -132,7 +132,7 @@
                     y0: 0,
                     y1: 1,
                     fillcolor: overlay.color,
-                    opacity: 0.35, // Increased opacity for better visibility
+                    opacity: 0.5, // Increased opacity for better visibility
                     line: { width: 0 }
                 });
             });
