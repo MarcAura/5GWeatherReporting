@@ -3,47 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5G Data Visualization</title>
-    <!-- Include Plotly for charting -->
+    <title>5G Data Visualization with Weather Overlays</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- Include Firebase libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
-        /* Basic page styling */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        h1 {
-            color: #333;
-            margin-top: 20px;
-            font-size: 2em;
-        }
-
         #chart {
             width: 80%;
             max-width: 1000px;
-            height: 600px;
+            height: 500px;
             margin-top: 20px;
             border: 1px solid #ddd;
             border-radius: 8px;
             background-color: #fff;
         }
+
+        /* Legend styling */
+        .legend {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .legend-color-box {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
+
+        /* Colors for each condition */
+        .clear-weather { background-color: #e6f7ff; }
+        .cloud-cover { background-color: #f2e6ff; }
+        .rain-high-humidity { background-color: #d9f2d9; }
+        .light-snowfall { background-color: #fff5e6; }
+        .heavy-snowfall { background-color: #ffcccc; }
     </style>
 </head>
 <body>
-    <h1>5G Data Visualization Dashboard</h1>
+    <h1>5G Data Visualization with Weather Overlays</h1>
     <div id="chart"></div>
 
+    <!-- Legend for weather overlays -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color-box clear-weather"></div> Clear Weather
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box cloud-cover"></div> Cloud Cover
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box rain-high-humidity"></div> Rain and High Humidity
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box light-snowfall"></div> Light Snowfall and Cloud Cover
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box heavy-snowfall"></div> Heavy Snowfall and High Snow Depth
+        </div>
+    </div>
+
     <script>
-        // Initialize Firebase with your project's configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBds2P9R-kdoBtVY3esPsIEUxhJ2pN2DbM",
             authDomain: "gweatherreporting.firebaseapp.com",
@@ -56,97 +89,41 @@
         };
         firebase.initializeApp(firebaseConfig);
 
-        // Reference to the Firebase Realtime Database 'kpis' node
         const db = firebase.database().ref('kpis');
         
-        // Define weather condition thresholds
-        function classifyWeatherCondition(entry) {
-            const { cloud_cover, humidity, precipitation, snowfall, snow_depth } = entry;
-
-            if (cloud_cover < 20 && precipitation === 0) {
-                return "Clear Weather";
-            } else if (cloud_cover >= 50 && precipitation === 0) {
-                return "Cloud Cover";
-            } else if (precipitation > 0 && humidity > 80) {
-                return "Rain and High Humidity";
-            } else if (snowfall > 0 && cloud_cover >= 50 && snowfall <= 2) {
-                return "Light Snowfall and Cloud Cover";
-            } else if (snowfall > 2 && snow_depth > 5) {
-                return "Heavy Snowfall and High Snow Depth";
-            } else {
-                return null; // No specific condition
-            }
-        }
-
-        // Function to update the chart with data from Firebase
         function updateChart(data) {
-            const dataArray = Object.keys(data).map(key => ({
-                timestamp: new Date(data[key].timestamp),
-                signal_strength: data[key].signal_strength,
-                latency: data[key].latency,
-                throughput: data[key].throughput,
-                weatherCondition: classifyWeatherCondition(data[key]) // Add classified weather condition
-            }));
+            const timestamps = data.map(entry => new Date(entry.timestamp));
+            const signalStrength = data.map(entry => entry.signal_strength);
+            const latency = data.map(entry => entry.latency);
+            const throughput = data.map(entry => entry.throughput);
 
-            // Sort data by timestamp
-            dataArray.sort((a, b) => a.timestamp - b.timestamp);
+            // Define traces
+            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
+            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
+            const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput', yaxis: 'y3' };
 
-            // Create time intervals for weather conditions
-            const overlays = [];
-            let currentCondition = null;
-            let intervalStart = null;
-
-            dataArray.forEach((entry, index) => {
-                const condition = entry.weatherCondition;
-
-                if (condition !== currentCondition) {
-                    if (currentCondition) {
-                        overlays.push({
-                            condition: currentCondition,
-                            start: intervalStart,
-                            end: entry.timestamp
-                        });
-                    }
-                    currentCondition = condition;
-                    intervalStart = entry.timestamp;
-                }
-
-                if (index === dataArray.length - 1 && currentCondition) {
-                    overlays.push({
-                        condition: currentCondition,
-                        start: intervalStart,
-                        end: entry.timestamp
-                    });
-                }
-            });
-
-            // Define colors for each condition
-            const conditionColors = {
-                "Clear Weather": 'rgba(173, 216, 230, 0.3)', // Light blue
-                "Cloud Cover": 'rgba(192, 192, 192, 0.3)',    // Light gray
-                "Rain and High Humidity": 'rgba(135, 206, 250, 0.3)', // Light sky blue
-                "Light Snowfall and Cloud Cover": 'rgba(255, 250, 250, 0.3)', // Snow color
-                "Heavy Snowfall and High Snow Depth": 'rgba(240, 248, 255, 0.3)' // Alice blue
-            };
-
-            // Set up Plotly traces
-            const timestamps = dataArray.map(entry => entry.timestamp);
-            const signalStrength = dataArray.map(entry => entry.signal_strength);
-            const latency = dataArray.map(entry => entry.latency);
-            const throughput = dataArray.map(entry => entry.throughput);
-
-            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength' };
-            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency' };
-            const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput' };
-
-            // Define layout and add weather overlays as shapes
             const layout = {
                 title: '5G KPIs Over Time with Weather Overlays',
-                xaxis: { title: 'Timestamp' },
-                yaxis: { title: 'Signal Strength (dBm)' },
-                yaxis2: { title: 'Latency (ms)', overlaying: 'y', side: 'right' },
-                yaxis3: { title: 'Throughput (kbps)', overlaying: 'y', side: 'right', position: 0.85 },
-                shapes: overlays.map(overlay => ({
+                xaxis: { title: 'Timestamp', domain: [0, 1] },
+                yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
+                yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.85 },
+                yaxis3: { title: 'Throughput (kbps)', side: 'right', overlaying: 'y', position: 0.95 },
+                showlegend: false
+            };
+
+            // Example overlay data for visualization
+            const weatherOverlays = [
+                { condition: 'Clear Weather', start: timestamps[0], end: timestamps[4], color: '#e6f7ff' },
+                { condition: 'Cloud Cover', start: timestamps[5], end: timestamps[9], color: '#f2e6ff' },
+                { condition: 'Rain and High Humidity', start: timestamps[10], end: timestamps[14], color: '#d9f2d9' },
+                { condition: 'Light Snowfall and Cloud Cover', start: timestamps[15], end: timestamps[19], color: '#fff5e6' },
+                { condition: 'Heavy Snowfall and High Snow Depth', start: timestamps[20], end: timestamps[24], color: '#ffcccc' },
+            ];
+
+            // Add weather overlays
+            weatherOverlays.forEach(overlay => {
+                layout.shapes = layout.shapes || [];
+                layout.shapes.push({
                     type: 'rect',
                     xref: 'x',
                     yref: 'paper',
@@ -154,25 +131,20 @@
                     x1: overlay.end,
                     y0: 0,
                     y1: 1,
-                    fillcolor: conditionColors[overlay.condition],
-                    opacity: 0.3,
+                    fillcolor: overlay.color,
+                    opacity: 0.2,
                     line: { width: 0 }
-                })),
-                legend: { x: 1, xanchor: 'left', y: 1 }
-            };
+                });
+            });
 
-            // Use Plotly.react to update the plot without creating duplicates
-            Plotly.react('chart', [trace1, trace2, trace3], layout);
+            // Plot with Plotly
+            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
         }
 
-        // Listen for changes in the database and update chart on change
-        db.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                updateChart(data);
-            } else {
-                console.warn("Firebase snapshot is empty");
-            }
+        // Fetch data and update chart
+        db.on('value', snapshot => {
+            const data = snapshot.val() ? Object.values(snapshot.val()) : [];
+            if (data.length) updateChart(data);
         });
     </script>
 </body>
