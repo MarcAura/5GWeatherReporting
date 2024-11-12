@@ -54,6 +54,7 @@
 <body>
     <h1>5G Data Visualization with Weather Overlays</h1>
     <div id="chart"></div>
+    <div id="weatherChart"></div>
 
     <div class="legend">
         <div class="legend-item">
@@ -73,8 +74,6 @@
         </div>
     </div>
 
-    <div id="weatherChart"></div> <!-- Additional div for the weather plot -->
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBds2P9R-kdoBtVY3esPsIEUxhJ2pN2DbM",
@@ -91,6 +90,7 @@
         const db = firebase.database().ref('kpis');
 
         function updateChart(data) {
+            // Sort data by timestamp to ensure correct display order
             data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
             const timestamps = data.map(entry => new Date(entry.timestamp));
@@ -137,18 +137,19 @@
 
             Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
 
-            // Also plot the weather data on the new chart
-            updateWeatherChart(data, timestamps);
+            // Prepare data for the second plot
+            updateWeatherChart(data);
         }
 
-        function updateWeatherChart(data, timestamps) {
-            const temperature = data.map(entry => entry.weather?.temperature || 0);
-            const humidity = data.map(entry => entry.weather?.humidity || 0);
-            const windSpeed = data.map(entry => entry.weather?.wind_speed || 0);
-            const cloudCover = data.map(entry => entry.weather?.cloud_cover || 0);
-            const precipitation = data.map(entry => entry.weather?.precipitation || 0);
-            const snowfall = data.map(entry => entry.weather?.snowfall || 0);
-            const snowDepth = data.map(entry => entry.weather?.snow_depth || 0);
+        function updateWeatherChart(data) {
+            const timestamps = data.map(entry => new Date(entry.timestamp));
+            const temperature = data.map(entry => entry.temperature);
+            const humidity = data.map(entry => entry.humidity);
+            const windSpeed = data.map(entry => entry.wind_speed);
+            const cloudCover = data.map(entry => entry.cloud_cover);
+            const precipitation = data.map(entry => entry.precipitation);
+            const snowfall = data.map(entry => entry.snowfall);
+            const snowDepth = data.map(entry => entry.snow_depth);
 
             const traceTemperature = { x: timestamps, y: temperature, type: 'scatter', mode: 'lines+markers', name: 'Temperature (°C)', yaxis: 'y1' };
             const traceHumidity = { x: timestamps, y: humidity, type: 'scatter', mode: 'lines+markers', name: 'Humidity (%)', yaxis: 'y2' };
@@ -160,18 +161,19 @@
 
             const layoutWeather = {
                 title: 'Weather Conditions Over Time',
-                xaxis: { title: 'Timestamp', domain: [0, 1] },
+                xaxis: { title: 'Timestamp' },
                 yaxis: { title: 'Temperature (°C)', side: 'left' },
-                yaxis2: { title: 'Humidity (%)', side: 'right', overlaying: 'y', position: 0.85 },
-                yaxis3: { title: 'Wind Speed (km/h)', side: 'right', overlaying: 'y', position: 0.9 },
-                yaxis4: { title: 'Cloud Cover (%)', side: 'right', overlaying: 'y', position: 0.95 },
-                yaxis5: { title: 'Precipitation (mm)', side: 'right', overlaying: 'y', position: 1.0 },
-                yaxis6: { title: 'Snowfall (cm)', side: 'right', overlaying: 'y', position: 1.05 },
-                yaxis7: { title: 'Snow Depth (cm)', side: 'right', overlaying: 'y', position: 1.1 },
-                showlegend: true
+                yaxis2: { title: 'Humidity (%)', overlaying: 'y', side: 'right', position: 0.85 },
+                yaxis3: { title: 'Wind Speed (km/h)', overlaying: 'y', side: 'right', position: 0.9 },
+                yaxis4: { title: 'Cloud Cover (%)', overlaying: 'y', side: 'right', position: 0.95 },
+                yaxis5: { title: 'Precipitation (mm)', overlaying: 'y', side: 'right', position: 1.0 },
+                yaxis6: { title: 'Snowfall (cm)', overlaying: 'y', side: 'right', position: 1.05 },
+                yaxis7: { title: 'Snow Depth (cm)', overlaying: 'y', side: 'right', position: 1.1 },
             };
 
-            Plotly.newPlot('weatherChart', [traceTemperature, traceHumidity, traceWindSpeed, traceCloudCover, tracePrecipitation, traceSnowfall, traceSnowDepth], layoutWeather);
+            Plotly.newPlot('weatherChart', [
+                traceTemperature, traceHumidity, traceWindSpeed, traceCloudCover, tracePrecipitation, traceSnowfall, traceSnowDepth
+            ], layoutWeather);
         }
 
         db.on('value', snapshot => {
