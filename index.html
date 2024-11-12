@@ -3,116 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5G Data Visualization</title>
-    <!-- Include Plotly for charting -->
+    <title>5G Data Visualization with Weather Overlays</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <!-- Include Firebase libraries -->
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
     <style>
-        /* Basic page styling */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        h1 {
-            color: #333;
-            margin-top: 20px;
-            font-size: 2em;
-        }
-        
-        #chart {
-            width: 80%;
-            max-width: 1000px;
-            height: 500px;
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #fff;
-        }
+        body { font-family: Arial, sans-serif; }
+        #chart { width: 100%; height: 800px; }
     </style>
 </head>
 <body>
-    <h1>5G Data Visualization Dashboard</h1>
+    <h1>5G KPI Visualization Dashboard</h1>
     <div id="chart"></div>
     
     <script>
-        // Initialize Firebase with your project's configuration
+        // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyBds2P9R-kdoBtVY3esPsIEUxhJ2pN2DbM",
-            authDomain: "gweatherreporting.firebaseapp.com",
-            databaseURL: "https://gweatherreporting-default-rtdb.firebaseio.com",
-            projectId: "gweatherreporting",
-            storageBucket: "gweatherreporting.firebasestorage.app",
-            messagingSenderId: "41795039504",
-            appId: "1:41795039504:web:e6f3108717a12b05b67595",
-            measurementId: "G-XBWC9G7HHD"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
         firebase.initializeApp(firebaseConfig);
         
-        // Reference to the Firebase Realtime Database 'kpis' node
         const db = firebase.database().ref('kpis');
-        let lastTimestamp = null; // Store the last timestamp seen to avoid duplicates after initial load
-        let initialLoadComplete = false; // Track whether initial load is complete
 
-        // Function to update the chart with data from Firebase
-        function updateChart(data) {
-            if (!data) {
-                console.warn("No data received from Firebase");
-                return;
-            }
-
-            console.log("Data received from Firebase:", data);
-
-            const dataArray = Object.keys(data).map(key => ({
-                timestamp: new Date(data[key].timestamp),
-                signal_strength: data[key].signal_strength,
-                latency: data[key].latency,
-                throughput: data[key].throughput
-            }));
-
-            // Sort data by timestamp to ensure continuity in the plot
-            dataArray.sort((a, b) => a.timestamp - b.timestamp);
-
-            const timestamps = dataArray.map(entry => entry.timestamp);
-            const signalStrength = dataArray.map(entry => entry.signal_strength);
-            const latency = dataArray.map(entry => entry.latency);
-            const throughput = dataArray.map(entry => entry.throughput);
-
-            // Define traces for Plotly with a single trace per metric to ensure a continuous line
-            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength' };
-            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency' };
-            const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput' };
-
-            const layout = { 
-                title: '5G KPIs Over Time',
-                xaxis: { title: 'Timestamp' },
-                yaxis: { title: 'Value' },
-                showlegend: true
-            };
+        async function fetchKPIAndWeatherData() {
+            const snapshot = await db.once('value');
+            const data = snapshot.val();
             
-            // Use Plotly.react to update the plot without creating duplicates
-            Plotly.react('chart', [trace1, trace2, trace3], layout);
+            const timestamps = [];
+            const signalStrength = [];
+            const latency = [];
+            const throughput = [];
 
-            // Mark initial load as complete
-            initialLoadComplete = true;
+            // Arrays for weather conditions and their time ranges
+            const weatherRegions = {
+                temperature: [],
+                humidity: [],
+                wind_speed: [],
+                cloud_cover: [],
+                precipitation: [],
+                snowfall: [],
+                snow_depth: []
+            };
+
+            Object.keys(data).forEach(key => {
+                const entry = data[key];
+                timestamps.push(new Date(entry.timestamp));
+                signalStrength.push(entry.signal_strength);
+                latency.push(entry.latency);
+                throughput.push(entry.throughput);
+
+                // Add weather data as regions based on the timestamp range of each type
+                if (entry.weather) {
+                    const time = new Date(entry.timestamp);
+                    for (let condition in weatherRegions) {
+                        if (entry.weather[condition] != null) {
+                            weatherRegions[condition].push({
+                                x0: time,
+                                x1: new Date(time.getTime() + 60 * 1000), // Assuming each timestamp is a 1-minute interval
+                                label: condition.charAt(0).toUpperCase() + condition.slice(1)
+                            });
+                        }
+                    }
+                }
+            });
+
+            // Create trace for Signal Strength
+            const trace1 = {
+                x: timestamps,
+                y: signalStrength,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Signal Strength',
+                yaxis: 'y1'
+            };
+
+            // Create trace for Latency
+            const trace2 = {
+                x: timestamps,
+                y: latency,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Latency',
+                yaxis: 'y2'
+            };
+
+            // Create trace for Throughput
+            const trace3 = {
+                x: timestamps,
+                y: throughput,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Throughput',
+                yaxis: 'y3'
+            };
+
+            // Generate weather overlays as shapes
+            const shapes = [];
+            Object.keys(weatherRegions).forEach((condition, index) => {
+                const color = `rgba(${index * 40}, ${255 - index * 30}, ${index * 50}, 0.2)`; // Light color shade
+                weatherRegions[condition].forEach(region => {
+                    shapes.push({
+                        type: 'rect',
+                        xref: 'x',
+                        yref: 'paper',
+                        x0: region.x0,
+                        x1: region.x1,
+                        y0: 0,
+                        y1: 1,
+                        fillcolor: color,
+                        opacity: 0.2,
+                        line: { width: 0 },
+                        label: condition
+                    });
+                });
+            });
+
+            // Layout for the plot
+            const layout = {
+                title: '5G KPIs Over Time with Weather Overlays',
+                grid: { rows: 3, columns: 1, pattern: 'independent' },
+                yaxis: { title: 'Signal Strength (dBm)', domain: [0.66, 1] },
+                yaxis2: { title: 'Latency (ms)', domain: [0.33, 0.66] },
+                yaxis3: { title: 'Throughput (kbps)', domain: [0, 0.33] },
+                xaxis: { title: 'Timestamp' },
+                shapes: shapes,
+                legend: { orientation: 'h' },
+                annotations: Object.keys(weatherRegions).map((condition, i) => ({
+                    text: condition.charAt(0).toUpperCase() + condition.slice(1),
+                    xref: 'paper',
+                    yref: 'paper',
+                    x: 1.05,
+                    y: 1 - i * 0.1,
+                    showarrow: false,
+                    font: { size: 10 },
+                    bgcolor: `rgba(${i * 40}, ${255 - i * 30}, ${i * 50}, 0.2)`
+                }))
+            };
+
+            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
         }
 
-        // Listen for changes in the database and update chart on change
-        db.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                updateChart(data);
-            } else {
-                console.warn("Firebase snapshot is empty");
-            }
-        });
+        // Fetch and plot KPI data along with weather overlays
+        fetchKPIAndWeatherData();
     </script>
 </body>
 </html>
