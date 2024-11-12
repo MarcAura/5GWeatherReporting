@@ -15,7 +15,7 @@
             align-items: center;
         }
 
-        #chart {
+        #chart, #weatherChart {
             width: 80%;
             max-width: 1000px;
             height: 500px;
@@ -73,6 +73,8 @@
         </div>
     </div>
 
+    <div id="weatherChart"></div> <!-- Additional div for the weather plot -->
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBds2P9R-kdoBtVY3esPsIEUxhJ2pN2DbM",
@@ -89,7 +91,6 @@
         const db = firebase.database().ref('kpis');
 
         function updateChart(data) {
-            // Sort data by timestamp to ensure correct display order
             data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
             const timestamps = data.map(entry => new Date(entry.timestamp));
@@ -135,6 +136,42 @@
             });
 
             Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
+
+            // Also plot the weather data on the new chart
+            updateWeatherChart(data, timestamps);
+        }
+
+        function updateWeatherChart(data, timestamps) {
+            const temperature = data.map(entry => entry.weather?.temperature || 0);
+            const humidity = data.map(entry => entry.weather?.humidity || 0);
+            const windSpeed = data.map(entry => entry.weather?.wind_speed || 0);
+            const cloudCover = data.map(entry => entry.weather?.cloud_cover || 0);
+            const precipitation = data.map(entry => entry.weather?.precipitation || 0);
+            const snowfall = data.map(entry => entry.weather?.snowfall || 0);
+            const snowDepth = data.map(entry => entry.weather?.snow_depth || 0);
+
+            const traceTemperature = { x: timestamps, y: temperature, type: 'scatter', mode: 'lines+markers', name: 'Temperature (°C)', yaxis: 'y1' };
+            const traceHumidity = { x: timestamps, y: humidity, type: 'scatter', mode: 'lines+markers', name: 'Humidity (%)', yaxis: 'y2' };
+            const traceWindSpeed = { x: timestamps, y: windSpeed, type: 'scatter', mode: 'lines+markers', name: 'Wind Speed (km/h)', yaxis: 'y3' };
+            const traceCloudCover = { x: timestamps, y: cloudCover, type: 'scatter', mode: 'lines+markers', name: 'Cloud Cover (%)', yaxis: 'y4' };
+            const tracePrecipitation = { x: timestamps, y: precipitation, type: 'scatter', mode: 'lines+markers', name: 'Precipitation (mm)', yaxis: 'y5' };
+            const traceSnowfall = { x: timestamps, y: snowfall, type: 'scatter', mode: 'lines+markers', name: 'Snowfall (cm)', yaxis: 'y6' };
+            const traceSnowDepth = { x: timestamps, y: snowDepth, type: 'scatter', mode: 'lines+markers', name: 'Snow Depth (cm)', yaxis: 'y7' };
+
+            const layoutWeather = {
+                title: 'Weather Conditions Over Time',
+                xaxis: { title: 'Timestamp', domain: [0, 1] },
+                yaxis: { title: 'Temperature (°C)', side: 'left' },
+                yaxis2: { title: 'Humidity (%)', side: 'right', overlaying: 'y', position: 0.85 },
+                yaxis3: { title: 'Wind Speed (km/h)', side: 'right', overlaying: 'y', position: 0.9 },
+                yaxis4: { title: 'Cloud Cover (%)', side: 'right', overlaying: 'y', position: 0.95 },
+                yaxis5: { title: 'Precipitation (mm)', side: 'right', overlaying: 'y', position: 1.0 },
+                yaxis6: { title: 'Snowfall (cm)', side: 'right', overlaying: 'y', position: 1.05 },
+                yaxis7: { title: 'Snow Depth (cm)', side: 'right', overlaying: 'y', position: 1.1 },
+                showlegend: true
+            };
+
+            Plotly.newPlot('weatherChart', [traceTemperature, traceHumidity, traceWindSpeed, traceCloudCover, tracePrecipitation, traceSnowfall, traceSnowDepth], layoutWeather);
         }
 
         db.on('value', snapshot => {
