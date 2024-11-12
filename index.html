@@ -26,13 +26,10 @@
         }
 
         .legend {
+            margin-top: 10px;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            margin-left: 20px;
-            position: absolute;
-            top: 100px;
-            right: 20px;
         }
 
         .legend-item {
@@ -47,28 +44,35 @@
             margin-right: 8px;
         }
 
-        .clear-weather { background-color: rgba(230, 247, 255, 0.35); }
-        .cloud-cover { background-color: rgba(242, 230, 255, 0.35); }
-        .rain-high-humidity { background-color: rgba(217, 242, 217, 0.35); }
-        .light-snowfall { background-color: rgba(255, 245, 230, 0.35); }
-        .heavy-snowfall { background-color: rgba(255, 204, 204, 0.35); }
+        .clear-weather { background-color: #e6f7ff; }
+        .cloud-cover { background-color: #f2e6ff; }
+        .rain-high-humidity { background-color: #d9f2d9; }
+        .light-snowfall { background-color: #fff5e6; }
+        .heavy-snowfall { background-color: #ffcccc; }
     </style>
 </head>
 <body>
     <h1>5G Data Visualization with Weather Overlays</h1>
+    <div id="chart"></div>
+    <div id="weatherChart"></div>
 
-    <div style="position: relative; width: 100%;">
-        <div id="chart"></div>
-        <div class="legend">
-            <div class="legend-item"><div class="legend-color-box clear-weather"></div> Clear Weather</div>
-            <div class="legend-item"><div class="legend-color-box cloud-cover"></div> Cloud Cover</div>
-            <div class="legend-item"><div class="legend-color-box rain-high-humidity"></div> Rain and High Humidity</div>
-            <div class="legend-item"><div class="legend-color-box light-snowfall"></div> Light Snowfall and Cloud Cover</div>
-            <div class="legend-item"><div class="legend-color-box heavy-snowfall"></div> Heavy Snowfall and High Snow Depth</div>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color-box clear-weather"></div> Clear Weather
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box cloud-cover"></div> Cloud Cover
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box rain-high-humidity"></div> Rain and High Humidity
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box light-snowfall"></div> Light Snowfall and Cloud Cover
+        </div>
+        <div class="legend-item">
+            <div class="legend-color-box heavy-snowfall"></div> Heavy Snowfall and High Snow Depth
         </div>
     </div>
-
-    <div id="weatherChart"></div>
 
     <script>
         const firebaseConfig = {
@@ -104,54 +108,77 @@
                 yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
                 yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.85 },
                 yaxis3: { title: 'Throughput (kbps)', side: 'right', overlaying: 'y', position: 0.95 },
-                showlegend: false,
-                shapes: [
-                    { type: 'rect', xref: 'x', yref: 'paper', x0: timestamps[0], x1: timestamps[4], y0: 0, y1: 1, fillcolor: 'rgba(230, 247, 255, 0.5)', line: { width: 0 } },
-                    { type: 'rect', xref: 'x', yref: 'paper', x0: timestamps[5], x1: timestamps[9], y0: 0, y1: 1, fillcolor: 'rgba(242, 230, 255, 0.5)', line: { width: 0 } },
-                    { type: 'rect', xref: 'x', yref: 'paper', x0: timestamps[10], x1: timestamps[14], y0: 0, y1: 1, fillcolor: 'rgba(217, 242, 217, 0.5)', line: { width: 0 } },
-                    { type: 'rect', xref: 'x', yref: 'paper', x0: timestamps[15], x1: timestamps[19], y0: 0, y1: 1, fillcolor: 'rgba(255, 245, 230, 0.5)', line: { width: 0 } },
-                    { type: 'rect', xref: 'x', yref: 'paper', x0: timestamps[20], x1: timestamps[24], y0: 0, y1: 1, fillcolor: 'rgba(255, 204, 204, 0.5)', line: { width: 0 } }
-                ]
+                showlegend: false
             };
 
+            const weatherOverlays = [
+                { condition: 'Clear Weather', start: timestamps[0], end: timestamps[4], color: '#e6f7ff' },
+                { condition: 'Cloud Cover', start: timestamps[5], end: timestamps[9], color: '#f2e6ff' },
+                { condition: 'Rain and High Humidity', start: timestamps[10], end: timestamps[14], color: '#d9f2d9' },
+                { condition: 'Light Snowfall and Cloud Cover', start: timestamps[15], end: timestamps[19], color: '#fff5e6' },
+                { condition: 'Heavy Snowfall and High Snow Depth', start: timestamps[20], end: timestamps[24], color: '#ffcccc' },
+            ];
+
+            weatherOverlays.forEach(overlay => {
+                layout.shapes = layout.shapes || [];
+                layout.shapes.push({
+                    type: 'rect',
+                    xref: 'x',
+                    yref: 'paper',
+                    x0: overlay.start,
+                    x1: overlay.end,
+                    y0: 0,
+                    y1: 1,
+                    fillcolor: overlay.color,
+                    opacity: 0.2,
+                    line: { width: 0 }
+                });
+            });
+
             Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
+
+            // Prepare data for the second plot
+            updateWeatherChart(data);
         }
 
         function updateWeatherChart(data) {
             const timestamps = data.map(entry => new Date(entry.timestamp));
-            const temperature = data.map(entry => entry.weather.temperature);
-            const humidity = data.map(entry => entry.weather.humidity);
-            const windSpeed = data.map(entry => entry.weather.wind_speed);
-            const cloudCover = data.map(entry => entry.weather.cloud_cover);
-            const precipitation = data.map(entry => entry.weather.precipitation);
-            const snowfall = data.map(entry => entry.weather.snowfall);
-            const snowDepth = data.map(entry => entry.weather.snow_depth);
+            const temperature = data.map(entry => entry.temperature);
+            const humidity = data.map(entry => entry.humidity);
+            const windSpeed = data.map(entry => entry.wind_speed);
+            const cloudCover = data.map(entry => entry.cloud_cover);
+            const precipitation = data.map(entry => entry.precipitation);
+            const snowfall = data.map(entry => entry.snowfall);
+            const snowDepth = data.map(entry => entry.snow_depth);
+
+            const traceTemperature = { x: timestamps, y: temperature, type: 'scatter', mode: 'lines+markers', name: 'Temperature (°C)', yaxis: 'y1' };
+            const traceHumidity = { x: timestamps, y: humidity, type: 'scatter', mode: 'lines+markers', name: 'Humidity (%)', yaxis: 'y2' };
+            const traceWindSpeed = { x: timestamps, y: windSpeed, type: 'scatter', mode: 'lines+markers', name: 'Wind Speed (km/h)', yaxis: 'y3' };
+            const traceCloudCover = { x: timestamps, y: cloudCover, type: 'scatter', mode: 'lines+markers', name: 'Cloud Cover (%)', yaxis: 'y4' };
+            const tracePrecipitation = { x: timestamps, y: precipitation, type: 'scatter', mode: 'lines+markers', name: 'Precipitation (mm)', yaxis: 'y5' };
+            const traceSnowfall = { x: timestamps, y: snowfall, type: 'scatter', mode: 'lines+markers', name: 'Snowfall (cm)', yaxis: 'y6' };
+            const traceSnowDepth = { x: timestamps, y: snowDepth, type: 'scatter', mode: 'lines+markers', name: 'Snow Depth (cm)', yaxis: 'y7' };
 
             const layoutWeather = {
                 title: 'Weather Conditions Over Time',
                 xaxis: { title: 'Timestamp' },
-                yaxis: { title: 'Weather Values' },
+                yaxis: { title: 'Temperature (°C)', side: 'left' },
+                yaxis2: { title: 'Humidity (%)', overlaying: 'y', side: 'right', position: 0.85 },
+                yaxis3: { title: 'Wind Speed (km/h)', overlaying: 'y', side: 'right', position: 0.9 },
+                yaxis4: { title: 'Cloud Cover (%)', overlaying: 'y', side: 'right', position: 0.95 },
+                yaxis5: { title: 'Precipitation (mm)', overlaying: 'y', side: 'right', position: 1.0 },
+                yaxis6: { title: 'Snowfall (cm)', overlaying: 'y', side: 'right', position: 1.05 },
+                yaxis7: { title: 'Snow Depth (cm)', overlaying: 'y', side: 'right', position: 1.1 },
             };
 
-            const traces = [
-                { x: timestamps, y: temperature, type: 'scatter', mode: 'lines+markers', name: 'Temperature (°C)' },
-                { x: timestamps, y: humidity, type: 'scatter', mode: 'lines+markers', name: 'Humidity (%)' },
-                { x: timestamps, y: windSpeed, type: 'scatter', mode: 'lines+markers', name: 'Wind Speed (km/h)' },
-                { x: timestamps, y: cloudCover, type: 'scatter', mode: 'lines+markers', name: 'Cloud Cover (%)' },
-                { x: timestamps, y: precipitation, type: 'scatter', mode: 'lines+markers', name: 'Precipitation (mm)' },
-                { x: timestamps, y: snowfall, type: 'scatter', mode: 'lines+markers', name: 'Snowfall (cm)' },
-                { x: timestamps, y: snowDepth, type: 'scatter', mode: 'lines+markers', name: 'Snow Depth (cm)' }
-            ];
-
-            Plotly.newPlot('weatherChart', traces, layoutWeather);
+            Plotly.newPlot('weatherChart', [
+                traceTemperature, traceHumidity, traceWindSpeed, traceCloudCover, tracePrecipitation, traceSnowfall, traceSnowDepth
+            ], layoutWeather);
         }
 
         db.on('value', snapshot => {
             const data = snapshot.val() ? Object.values(snapshot.val()) : [];
-            if (data.length) {
-                updateChart(data);
-                updateWeatherChart(data);
-            }
+            if (data.length) updateChart(data);
         });
     </script>
 </body>
