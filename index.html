@@ -25,7 +25,6 @@
             background-color: #fff;
         }
 
-        /* Legend styling */
         .legend {
             margin-top: 10px;
             display: flex;
@@ -45,7 +44,6 @@
             margin-right: 8px;
         }
 
-        /* Colors for each condition */
         .clear-weather { background-color: #e6f7ff; }
         .cloud-cover { background-color: #f2e6ff; }
         .rain-high-humidity { background-color: #d9f2d9; }
@@ -57,7 +55,6 @@
     <h1>5G Data Visualization with Weather Overlays</h1>
     <div id="chart"></div>
 
-    <!-- Legend for weather overlays -->
     <div class="legend">
         <div class="legend-item">
             <div class="legend-color-box clear-weather"></div> Clear Weather
@@ -90,14 +87,16 @@
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database().ref('kpis');
-        
+
         function updateChart(data) {
+            // Sort data by timestamp to ensure correct display order
+            data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
             const timestamps = data.map(entry => new Date(entry.timestamp));
             const signalStrength = data.map(entry => entry.signal_strength);
             const latency = data.map(entry => entry.latency);
             const throughput = data.map(entry => entry.throughput);
 
-            // Define traces
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
             const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
             const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput', yaxis: 'y3' };
@@ -111,7 +110,6 @@
                 showlegend: false
             };
 
-            // Example overlay data for visualization
             const weatherOverlays = [
                 { condition: 'Clear Weather', start: timestamps[0], end: timestamps[4], color: '#e6f7ff' },
                 { condition: 'Cloud Cover', start: timestamps[5], end: timestamps[9], color: '#f2e6ff' },
@@ -120,7 +118,6 @@
                 { condition: 'Heavy Snowfall and High Snow Depth', start: timestamps[20], end: timestamps[24], color: '#ffcccc' },
             ];
 
-            // Add weather overlays
             weatherOverlays.forEach(overlay => {
                 layout.shapes = layout.shapes || [];
                 layout.shapes.push({
@@ -137,11 +134,9 @@
                 });
             });
 
-            // Plot with Plotly
             Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
         }
 
-        // Fetch data and update chart
         db.on('value', snapshot => {
             const data = snapshot.val() ? Object.values(snapshot.val()) : [];
             if (data.length) updateChart(data);
