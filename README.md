@@ -2,6 +2,8 @@
 
 This project is a web-based data visualization dashboard for real-time monitoring and analysis of key performance indicators (KPIs) in a 5G network environment. Built with Firebase for backend data storage and Plotly.js for front-end graphing, the dashboard receives KPI data (signal strength, latency, and throughput) from a Raspberry Pi with a 5G hat and SIM card. The dashboard also integrates real-time weather data to provide insights into 5G performance under varying weather conditions.
 
+The idea with this dashboard is to take expected values of 5G connection performance, paired with weather conditions, and graph them in a way that the trend under certain weather conditions is plainly apparent. Then, we will compare this with real data values aquired from a 5G transmitter with real weather parameters retrieved from a weather database. We will compare the trends observed from the real values with the trends observed from expected data from pre-defined weather thresholds.
+
 ## Features
 - **Real-Time Data Display**: Fetches and displays live 5G KPIs such as signal strength, latency, and throughput.
 - **Weather Overlay**: Integrates weather data using a weather API for correlation with 5G performance metrics.
