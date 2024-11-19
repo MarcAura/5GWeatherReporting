@@ -112,8 +112,8 @@
                 yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
                 yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.85 },
                 yaxis3: { title: 'Throughput (kbps)', side: 'right', overlaying: 'y', position: 0.95 },
-                yaxis3: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 0.70 },
-                showlegend: false
+                yaxis4: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 1.05 },
+                showlegend: true
             };
 
             const weatherOverlays = [
@@ -135,7 +135,7 @@
                     y0: 0,
                     y1: 1,
                     fillcolor: overlay.color,
-                    opacity: 0.5, // Increased opacity for better visibility
+                    opacity: 0.5,
                     line: { width: 0 }
                 });
             });
