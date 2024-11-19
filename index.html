@@ -99,10 +99,12 @@
             const signalStrength = data.map(entry => entry.signal_strength);
             const latency = data.map(entry => entry.latency);
             const throughput = data.map(entry => entry.throughput);
+            const throughput = data.map(entry => entry.packet_loss);
 
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
             const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
             const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput', yaxis: 'y3' };
+            const trace4 = { x: timestamps, y: packetLoss, type: 'scatter', mode: 'lines+markers', name: 'Packet Loss', yaxis: 'y4' };
 
             const layout = {
                 title: '5G KPIs Over Time with Weather Overlays',
@@ -110,6 +112,7 @@
                 yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
                 yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.85 },
                 yaxis3: { title: 'Throughput (kbps)', side: 'right', overlaying: 'y', position: 0.95 },
+                yaxis3: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 0.70 },
                 showlegend: false
             };
 
@@ -137,7 +140,7 @@
                 });
             });
 
-            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
+            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4], layout);
 
             // Prepare data for the second plot
             updateWeatherChart(data);
