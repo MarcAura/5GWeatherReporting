@@ -15,7 +15,7 @@
             align-items: center;
         }
 
-        #chart, #weatherChart, #packetLossChart {
+        #chart, #weatherChart {
             width: 80%;
             max-width: 1000px;
             height: 500px;
@@ -75,7 +75,6 @@
     </div>
 
     <div id="weatherChart"></div>
-    <div id="packetLossChart"></div>
 
     <script>
         const firebaseConfig = {
@@ -105,6 +104,7 @@
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
             const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
             const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput', yaxis: 'y3' };
+            const trace4 = { x: timestamps, y: packetLoss, type: 'scatter', mode: 'lines+markers', name: 'Packet Loss', yaxis: 'y4', line: { color: 'red' } };
 
             const layout = {
                 title: '5G KPIs Over Time with Weather Overlays',
@@ -112,7 +112,8 @@
                 yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
                 yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.85 },
                 yaxis3: { title: 'Throughput (kbps)', side: 'right', overlaying: 'y', position: 0.95 },
-                showlegend: false
+                yaxis4: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 1.05 },
+                showlegend: true
             };
 
             const weatherOverlays = [
@@ -139,13 +140,7 @@
                 });
             });
 
-            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
-
-            // Update weather chart
-            updateWeatherChart(data);
-
-            // Update packet loss chart
-            updatePacketLossChart(timestamps, packetLoss);
+            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4], layout);
         }
 
         function updateWeatherChart(data) {
@@ -164,26 +159,6 @@
             };
 
             Plotly.newPlot('weatherChart', [traceTemperature, traceHumidity], layoutWeather);
-        }
-
-        function updatePacketLossChart(timestamps, packetLoss) {
-            const tracePacketLoss = {
-                x: timestamps,
-                y: packetLoss,
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: 'Packet Loss (%)',
-                line: { color: 'red' }
-            };
-
-            const layoutPacketLoss = {
-                title: 'Packet Loss Over Time',
-                xaxis: { title: 'Timestamp' },
-                yaxis: { title: 'Packet Loss (%)' },
-                showlegend: true
-            };
-
-            Plotly.newPlot('packetLossChart', [tracePacketLoss], layoutPacketLoss);
         }
 
         db.on('value', snapshot => {
