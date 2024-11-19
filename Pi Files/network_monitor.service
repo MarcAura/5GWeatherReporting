@@ -1,0 +1,14 @@
+[Unit]
+Description=Network Monitoring and Firebase Logging
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /path/to/network_monitor.py
+WorkingDirectory=/path/to/your/project
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
