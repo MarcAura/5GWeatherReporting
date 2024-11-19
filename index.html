@@ -15,7 +15,7 @@
             align-items: center;
         }
 
-        #chart, #weatherChart {
+        #chart, #weatherChart, #packetLossChart {
             width: 80%;
             max-width: 1000px;
             height: 500px;
@@ -75,6 +75,7 @@
     </div>
 
     <div id="weatherChart"></div>
+    <div id="packetLossChart"></div>
 
     <script>
         const firebaseConfig = {
@@ -99,6 +100,7 @@
             const signalStrength = data.map(entry => entry.signal_strength);
             const latency = data.map(entry => entry.latency);
             const throughput = data.map(entry => entry.throughput);
+            const packetLoss = data.map(entry => entry.packet_loss);
 
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
             const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
@@ -132,34 +134,27 @@
                     y0: 0,
                     y1: 1,
                     fillcolor: overlay.color,
-                    opacity: 0.5, // Increased opacity for better visibility
+                    opacity: 0.5,
                     line: { width: 0 }
                 });
             });
 
             Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
 
-            // Prepare data for the second plot
+            // Update weather chart
             updateWeatherChart(data);
+
+            // Update packet loss chart
+            updatePacketLossChart(timestamps, packetLoss);
         }
 
         function updateWeatherChart(data) {
             const timestamps = data.map(entry => new Date(entry.timestamp));
             const temperature = data.map(entry => entry.temperature);
             const humidity = data.map(entry => entry.humidity);
-            const windSpeed = data.map(entry => entry.wind_speed);
-            const cloudCover = data.map(entry => entry.cloud_cover);
-            const precipitation = data.map(entry => entry.precipitation);
-            const snowfall = data.map(entry => entry.snowfall);
-            const snowDepth = data.map(entry => entry.snow_depth);
 
             const traceTemperature = { x: timestamps, y: temperature, type: 'scatter', mode: 'lines+markers', name: 'Temperature (°C)' };
             const traceHumidity = { x: timestamps, y: humidity, type: 'scatter', mode: 'lines+markers', name: 'Humidity (%)' };
-            const traceWindSpeed = { x: timestamps, y: windSpeed, type: 'scatter', mode: 'lines+markers', name: 'Wind Speed (km/h)' };
-            const traceCloudCover = { x: timestamps, y: cloudCover, type: 'scatter', mode: 'lines+markers', name: 'Cloud Cover (%)' };
-            const tracePrecipitation = { x: timestamps, y: precipitation, type: 'scatter', mode: 'lines+markers', name: 'Precipitation (mm)' };
-            const traceSnowfall = { x: timestamps, y: snowfall, type: 'scatter', mode: 'lines+markers', name: 'Snowfall (cm)' };
-            const traceSnowDepth = { x: timestamps, y: snowDepth, type: 'scatter', mode: 'lines+markers', name: 'Snow Depth (cm)' };
 
             const layoutWeather = {
                 title: 'Weather Conditions Over Time',
@@ -168,9 +163,27 @@
                 showlegend: true
             };
 
-            Plotly.newPlot('weatherChart', [
-                traceTemperature, traceHumidity, traceWindSpeed, traceCloudCover, tracePrecipitation, traceSnowfall, traceSnowDepth
-            ], layoutWeather);
+            Plotly.newPlot('weatherChart', [traceTemperature, traceHumidity], layoutWeather);
+        }
+
+        function updatePacketLossChart(timestamps, packetLoss) {
+            const tracePacketLoss = {
+                x: timestamps,
+                y: packetLoss,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Packet Loss (%)',
+                line: { color: 'red' }
+            };
+
+            const layoutPacketLoss = {
+                title: 'Packet Loss Over Time',
+                xaxis: { title: 'Timestamp' },
+                yaxis: { title: 'Packet Loss (%)' },
+                showlegend: true
+            };
+
+            Plotly.newPlot('packetLossChart', [tracePacketLoss], layoutPacketLoss);
         }
 
         db.on('value', snapshot => {
