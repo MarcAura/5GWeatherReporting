@@ -99,12 +99,10 @@
             const signalStrength = data.map(entry => entry.signal_strength);
             const latency = data.map(entry => entry.latency);
             const throughput = data.map(entry => entry.throughput);
-            const packetLoss = data.map(entry => entry.packet_loss);
 
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
             const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
             const trace3 = { x: timestamps, y: throughput, type: 'scatter', mode: 'lines+markers', name: 'Throughput', yaxis: 'y3' };
-            const trace4 = { x: timestamps, y: packetLoss, type: 'scatter', mode: 'lines+markers', name: 'Packet Loss', yaxis: 'y4', line: { color: 'red' } };
 
             const layout = {
                 title: '5G KPIs Over Time with Weather Overlays',
@@ -112,8 +110,7 @@
                 yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
                 yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.85 },
                 yaxis3: { title: 'Throughput (kbps)', side: 'right', overlaying: 'y', position: 0.95 },
-                yaxis4: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 1.05 },
-                showlegend: true
+                showlegend: false
             };
 
             const weatherOverlays = [
@@ -135,21 +132,34 @@
                     y0: 0,
                     y1: 1,
                     fillcolor: overlay.color,
-                    opacity: 0.5,
+                    opacity: 0.5, // Increased opacity for better visibility
                     line: { width: 0 }
                 });
             });
 
-            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4], layout);
+            Plotly.newPlot('chart', [trace1, trace2, trace3], layout);
+
+            // Prepare data for the second plot
+            updateWeatherChart(data);
         }
 
         function updateWeatherChart(data) {
             const timestamps = data.map(entry => new Date(entry.timestamp));
             const temperature = data.map(entry => entry.temperature);
             const humidity = data.map(entry => entry.humidity);
+            const windSpeed = data.map(entry => entry.wind_speed);
+            const cloudCover = data.map(entry => entry.cloud_cover);
+            const precipitation = data.map(entry => entry.precipitation);
+            const snowfall = data.map(entry => entry.snowfall);
+            const snowDepth = data.map(entry => entry.snow_depth);
 
             const traceTemperature = { x: timestamps, y: temperature, type: 'scatter', mode: 'lines+markers', name: 'Temperature (°C)' };
             const traceHumidity = { x: timestamps, y: humidity, type: 'scatter', mode: 'lines+markers', name: 'Humidity (%)' };
+            const traceWindSpeed = { x: timestamps, y: windSpeed, type: 'scatter', mode: 'lines+markers', name: 'Wind Speed (km/h)' };
+            const traceCloudCover = { x: timestamps, y: cloudCover, type: 'scatter', mode: 'lines+markers', name: 'Cloud Cover (%)' };
+            const tracePrecipitation = { x: timestamps, y: precipitation, type: 'scatter', mode: 'lines+markers', name: 'Precipitation (mm)' };
+            const traceSnowfall = { x: timestamps, y: snowfall, type: 'scatter', mode: 'lines+markers', name: 'Snowfall (cm)' };
+            const traceSnowDepth = { x: timestamps, y: snowDepth, type: 'scatter', mode: 'lines+markers', name: 'Snow Depth (cm)' };
 
             const layoutWeather = {
                 title: 'Weather Conditions Over Time',
@@ -158,7 +168,9 @@
                 showlegend: true
             };
 
-            Plotly.newPlot('weatherChart', [traceTemperature, traceHumidity], layoutWeather);
+            Plotly.newPlot('weatherChart', [
+                traceTemperature, traceHumidity, traceWindSpeed, traceCloudCover, tracePrecipitation, traceSnowfall, traceSnowDepth
+            ], layoutWeather);
         }
 
         db.on('value', snapshot => {
