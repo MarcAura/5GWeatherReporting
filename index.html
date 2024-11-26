@@ -102,20 +102,21 @@
             const sinr = data.map(entry => entry.sinr);
             const packetLoss = data.map(entry => entry.packet_loss);
 
-            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'lines+markers', name: 'Signal Strength', yaxis: 'y1' };
-            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'lines+markers', name: 'Latency', yaxis: 'y2' };
-            const trace3 = { x: timestamps, y: rsrp, type: 'scatter', mode: 'lines+markers', name: 'RSRP', yaxis: 'y3' };
-            const trace5 = { x: timestamps, y: sinr, type: 'scatter', mode: 'lines+markers', name: 'SINR', yaxis: 'y5' };
-            const trace4 = { x: timestamps, y: packetLoss, type: 'scatter', mode: 'lines+markers', name: 'Packet Loss', yaxis: 'y4' };
-
+            // 'lines+markers' for lines
+            const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'markers', name: 'Signal Strength', yaxis: 'y1' };
+            const trace2 = { x: timestamps, y: latency, type: 'scatter', mode: 'markers', name: 'Latency', yaxis: 'y2' };
+            const trace3 = { x: timestamps, y: rsrp, type: 'scatter', mode: 'markers', name: 'RSRP', yaxis: 'y3' };
+            const trace4 = { x: timestamps, y: packetLoss, type: 'scatter', mode: 'markers', name: 'Packet Loss', yaxis: 'y4' };
+            const trace5 = { x: timestamps, y: sinr, type: 'scatter', mode: 'markers', name: 'SINR', yaxis: 'y5' };
+            
             const layout = {
                 title: '5G KPIs Over Time with Weather Overlays',
                 xaxis: { title: 'Timestamp', domain: [0, 1] },
                 yaxis: { title: 'Signal Strength (dBm)', side: 'left' },
                 yaxis2: { title: 'Latency (ms)', side: 'right', overlaying: 'y', position: 0.7 },
                 yaxis3: { title: 'RSRP (kbps)', side: 'right', overlaying: 'y', position: 0.85 },
-                yaxis5: { title: 'SINR (kbps)', side: 'right', overlaying: 'y', position: 0.65 },
                 yaxis4: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 1.0 },
+                yaxis5: { title: 'SINR (kbps)', side: 'right', overlaying: 'y', position: 0.65 },
                 showlegend: true
             };
 
@@ -143,7 +144,7 @@
                 });
             });
 
-            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4], layout);
+            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4, trace5], layout);
 
             // Prepare data for the second plot
             updateWeatherChart(data);
