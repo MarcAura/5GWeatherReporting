@@ -101,6 +101,8 @@
             const rsrp = data.map(entry => entry.rsrp);
             const sinr = data.map(entry => entry.sinr);
             const packetLoss = data.map(entry => entry.packet_loss);
+            const downloadSpeed = data.map(entry => entry.download_speed);
+            const uploadSpeed = data.map(entry => entry.upload_speed);
 
             // 'lines+markers' for lines
             const trace1 = { x: timestamps, y: signalStrength, type: 'scatter', mode: 'markers', name: 'Signal Strength', yaxis: 'y1' };
@@ -108,6 +110,8 @@
             const trace3 = { x: timestamps, y: rsrp, type: 'scatter', mode: 'markers', name: 'RSRP', yaxis: 'y3' };
             const trace4 = { x: timestamps, y: packetLoss, type: 'scatter', mode: 'markers', name: 'Packet Loss', yaxis: 'y4' };
             const trace5 = { x: timestamps, y: sinr, type: 'scatter', mode: 'markers', name: 'SINR', yaxis: 'y5' };
+            const trace6 = { x: timestamps, y: download_speed, type: 'scatter', mode: 'markers', name: 'Download Speed', yaxis: 'y6' };
+            const trace7 = { x: timestamps, y: upload_speed, type: 'scatter', mode: 'markers', name: 'Upload Speed', yaxis: 'y7' };
             
             const layout = {
                 title: '5G KPIs Over Time with Weather Overlays',
@@ -117,6 +121,8 @@
                 yaxis3: { title: 'RSRP (dBm)', side: 'right', overlaying: 'y', position: 0.85 },
                 yaxis4: { title: 'Packet Loss (%)', side: 'right', overlaying: 'y', position: 1.0 },
                 yaxis5: { title: 'SINR (dB)', side: 'right', overlaying: 'y', position: 0.55 },
+                yaxis6: { title: 'Download Speed (Mbps)', side: 'right', overlaying: 'y', position: 0.40 },
+                yaxis7: { title: 'Upload Speed (Mbps)', side: 'right', overlaying: 'y', position: 0.25 },
                 showlegend: true
             };
 
@@ -144,7 +150,7 @@
                 });
             });
 
-            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4, trace5], layout);
+            Plotly.newPlot('chart', [trace1, trace2, trace3, trace4, trace5, trace6, trace7], layout);
 
             // Prepare data for the second plot
             updateWeatherChart(data);
